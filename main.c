@@ -1,8 +1,8 @@
 #define _CRT_SECURE_NO_DEPRECATE
 #include <stdio.h>
-#include<string.h>
-#include<math.h>
-#include<stdlib.h>
+#include <string.h>
+#include <math.h>
+#include <stdlib.h>
 
 #define MAX_ROW 1000    //input file will have less than or equal to 1000 lines
 #define MAX_LEN 1000
@@ -10,7 +10,7 @@
 
 //1,2,3,4
 //5,55555, 7
-//8,11111,   12,   13,15
+//8,111111,   12,   13,15
 
     char* trim(char* token) {
         if (!token)     //error checking
@@ -24,7 +24,10 @@
     }
 //    ex: convert t.tl5 t.csv
     void toCSV(char* inFile,char* outFile, char* inType){
-        printf("\ninput file-> %s, output file-> %s, changing .csv to .%s\n", inFile, outFile, inType);
+/*
+*   .csv (comma separated values) file: stores tabular data in plain text. Each line of the file represents a table row containing one or more cells separated by commas.
+*/
+        printf("\ninput file-> %s, output file-> %s, changing .%s to .csv\n", inFile, outFile, inType);
 
         char* delimiter; //allows to split file either by commas or |
         if((!strcmp(inType, "csv"))){ delimiter = ",";  }else{  delimiter = "|"; }
@@ -67,12 +70,21 @@
 
 //    ex: convert t.csv t.tc9
     void toTC9(char* inFile,char* outFile, char* inType){
-        printf("\ninput file-> %s, output file-> %s, changing .tc9 to .%s\n", inFile, outFile, inType);
+        printf("\ninput file-> %s, output file-> %s, changing .%s to .tc9\n", inFile, outFile, inType);
     }
 
 //    ex: convert t.csv t.tl5
     void toTL5(char* inFile,char* outFile, char* inType){
-        printf("\ninput file-> %s, output file-> %s, changing .tl5 to .%s\n", inFile, outFile, inType);
+    /*
+    * .tl5 file:  stores tabular data in plain text. Each line of the file represents a table row
+    containing one or more cells separated by ’|’ character. Each cell is 5-characters long
+    and contains a left-aligned string. If the string stored in a cell has n < 5 characters,
+    the rest of it will be filled with spaces; i.e. there will be 5 −n extra space characters in
+    the field after the string. However, if a string with more than 5 characters is supposed
+    to be placed in a cell, only its first 5 characters is stored in the cell.
+    .
+    */
+        printf("\ninput file-> %s, output file-> %s, changing .%s to.tl5\n", inFile, outFile, inType);
 
         char* delimiter; //allows to split file either by commas or |
         if((!strcmp(inType, "csv"))){ delimiter = ",";  }else{  delimiter = "|"; }
@@ -114,7 +126,76 @@
     }
 //    ex: convert t.csv t.tr9
     void toTR9(char* inFile,char* outFile, char* inType){
-        printf("\ninput file-> %s, output file-> %s, changing .tr9 to .%s\n", inFile, outFile, inType);
+    /*
+        .tr9 file: stores tabular data in plain text. Each line of the file represents a table row
+        containing one or more cells separated by ’|’ character. Each cell is 9-characters long
+        and contains a right-aligned string. If the string stored in a cell has n < 9 characters,
+        the rest of it will be filled with spaces; i.e. there will be 9 −n extra space characters in
+        the cell before the string. However, if a string with more than 9 characters is supposed
+        to be placed in a cell, only its last 9 characters is stored in the cell.
+
+    */
+        printf("\ninput file-> %s, output file-> %s, changing .%s to .tr9\n", inFile, outFile, inType);
+
+        char* delimiter; //allows to split file either by commas or |
+        if((!strcmp(inType, "csv"))){ delimiter = ",";  }else{  delimiter = "|"; }
+        printf("delimiter: %s \n", delimiter);
+
+        int char_count; //store how many extra chars are in original cell
+        char inTemp[MAX_TOKEN]; //to keep original string unchanged
+        char outTemp[MAX_TOKEN];
+        char temp1[MAX_TOKEN] = "../";
+        char temp2[MAX_TOKEN] = "../";
+
+        strcpy(inTemp, inFile);
+        strcpy(outTemp, outFile);
+
+        strcat(temp1,inTemp); //need to add "../" at beginning of file path to avoid a pop up error
+        strcat(temp2,outTemp);
+
+        int i = 0,dataIndex = 0;
+
+        FILE* input = fopen(temp1, "r");
+        char* data[MAX_ROW];        // will store the file content
+        char* token;
+        char line[MAX_LEN];         //temporary placeholder for a line input from the file
+        for (; fscanf(input, "%[^\n]\n", line) != EOF; i++) {
+            data[dataIndex] = (char*)malloc(strlen(line) + 1);//+1 for \0
+            strcpy(data[dataIndex++], line);
+        }
+        fclose(input);
+
+        FILE* output = fopen(temp2, "w");
+
+        for (i = 0; i < dataIndex; i++) {
+            printf("Data[i] -> %s\n",data[i]);
+            token = trim(strtok(data[i], delimiter));   //tokenizes the ith row stored in data[i] and trims it
+
+            char_count = strlen(token); //store how many extra chars are in original cell
+            printf("token -> %s .... char_count -> %d\n",token, char_count);
+
+            if(char_count > 9){
+                printf("token bigger than 9, only last 9 chars will be saved\n");
+                token = token + (char_count - 9);
+                fprintf(output, "%9.9s|", token);
+
+            }else{ fprintf(output, "%9.9s|", token); }
+
+            while ((token = trim(strtok(NULL,delimiter)))) {
+                char_count = strlen(token);
+                printf("token -> %s .... char_count -> %d\n",token, char_count);
+                if(char_count > 9){
+                    printf("token bigger than 9\n");
+                    token = token + (char_count - 9);
+                    fprintf(output, "%9.9s|", token);
+
+                }else{ fprintf(output, "%9.9s|", token); }
+            }
+            fprintf(output, i == dataIndex - 1 ? "" : "\n");
+        }
+        fclose(output);
+        printf("\n****** %s is ready to be viewed! ******\n\n\n", outFile);
+
     }
 
     char getCommandWord(char command[], int maxLength) {
