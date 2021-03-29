@@ -7,6 +7,7 @@
 #define MAX_ROW 1000    //input file will have less than or equal to 1000 lines
 #define MAX_LEN 1000
 #define MAX_TOKEN 100
+
     char* trim(char* token) {
         if (!token)     //error checking
             return NULL;
@@ -17,18 +18,59 @@
         token[i + 1] = '\0';
         return token;
     }
+//    ex: convert t.tl5 t.csv
     void toCSV(char* inFile,char* outFile, char* inType){
         printf("\ninput file-> %s, output file-> %s, changing .csv to .%s\n", inFile, outFile, inType);
+
     }
+
+//    ex: convert t.csv t.tc9
     void toTC9(char* inFile,char* outFile, char* inType){
         printf("\ninput file-> %s, output file-> %s, changing .tc9 to .%s\n", inFile, outFile, inType);
     }
+
+//    ex: convert t.csv t.tl5
     void toTL5(char* inFile,char* outFile, char* inType){
         printf("\ninput file-> %s, output file-> %s, changing .tl5 to .%s\n", inFile, outFile, inType);
+        char inTemp[MAX_TOKEN]; //to keep original string unchanged
+        char outTemp[MAX_TOKEN];
+        char temp1[MAX_TOKEN] = "../";
+        char temp2[MAX_TOKEN] = "../";
+
+        strcpy(inTemp, inFile);
+        strcpy(outTemp, outFile);
+
+        strcat(temp1,inTemp); //need to add "../" at beginning of file path to avoid a pop up error
+        strcat(temp2,outTemp);
+
+        int i = 0,dataIndex = 0;
+
+        FILE* input = fopen(temp1, "r");
+        char* data[MAX_ROW];        // will store the file content
+        char* token;
+        char line[MAX_LEN];         //temporary placeholder for a line input from the file
+        for (; fscanf(input, "%[^\n]\n", line) != EOF; i++) {
+            data[dataIndex] = (char*)malloc(strlen(line) + 1);//+1 for \0
+            strcpy(data[dataIndex++], line);
+        }
+        fclose(input);
+
+        FILE* output = fopen(temp2, "w");
+        for (i = 0; i < dataIndex; i++) {
+            token = trim(strtok(data[i], ","));     //tokenizes the ith row stored in data[i] and trims it
+            fprintf(output, "%-5.5s", token);
+            while ((token = trim(strtok(NULL,","))))
+                fprintf(output, "|%-5.5s", token);
+            fprintf(output, i == dataIndex - 1 ? "" : "\n");
+        }
+        fclose(output);
+        printf("%s is ready to be viewed!\n", outFile);
     }
+//    ex: convert t.csv t.tr9
     void toTR9(char* inFile,char* outFile, char* inType){
         printf("\ninput file-> %s, output file-> %s, changing .tr9 to .%s\n", inFile, outFile, inType);
     }
+
     char getCommandWord(char command[], int maxLength) {
         char lastCharacter;//either space or new line
         int i;
@@ -103,6 +145,8 @@
                     }
                 }else{
                     printf("\nINVALID FILE TYPE! supported files are .csv .tc9 .tl5 .tr9\n");
+                    while (lastCharacter1 != '\n')//skip the remainder of my invalid command...
+                        lastCharacter1 = getCommandWord(command, MAX_TOKEN);
                 }
             }
             else {
@@ -111,26 +155,5 @@
                     lastCharacter1 = getCommandWord(command, MAX_TOKEN);
             }
         }
-
-//        int i = 0,dataIndex = 0;
-//        FILE* input = fopen("..\\mytable.csv", "r");
-//        char* data[MAX_ROW];        // will store the file content
-//        char* token;
-//        char line[MAX_LEN];         //temporary placeholder for a line input from the file
-//        for (; fscanf(input, "%[^\n]\n", line) != EOF; i++) {
-//            data[dataIndex] = (char*)malloc(strlen(line) + 1);//+1 for \0
-//            strcpy(data[dataIndex++], line);
-//        }
-//        fclose(input);
-//        FILE* output = fopen("..\\mytable.tl5", "w");
-//        for (i = 0; i < dataIndex; i++) {
-//            token = trim(strtok(data[i], ","));     //tokenizes the ith row stored in data[i] and trims it
-//            fprintf(output, "%-5.5s", token);
-//            while ((token = trim(strtok(NULL,","))))
-//                fprintf(output, "|%-5.5s", token);
-//            fprintf(output, i == dataIndex - 1 ? "" : "\n");
-//        }
-//        fclose(output);
-
     }
 
