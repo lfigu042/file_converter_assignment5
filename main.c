@@ -32,6 +32,11 @@
 //    ex: convert t.csv t.tl5
     void toTL5(char* inFile,char* outFile, char* inType){
         printf("\ninput file-> %s, output file-> %s, changing .tl5 to .%s\n", inFile, outFile, inType);
+
+        char* delimiter; //allows to split file either by commas or |
+        if((!strcmp(inType, "csv"))){ delimiter = ",";  }else{  delimiter = "|"; }
+        printf("delimiter: %s \n", delimiter);
+
         char inTemp[MAX_TOKEN]; //to keep original string unchanged
         char outTemp[MAX_TOKEN];
         char temp1[MAX_TOKEN] = "../";
@@ -57,9 +62,9 @@
 
         FILE* output = fopen(temp2, "w");
         for (i = 0; i < dataIndex; i++) {
-            token = trim(strtok(data[i], ","));     //tokenizes the ith row stored in data[i] and trims it
+            token = trim(strtok(data[i], delimiter));     //tokenizes the ith row stored in data[i] and trims it
             fprintf(output, "%-5.5s", token);
-            while ((token = trim(strtok(NULL,","))))
+            while ((token = trim(strtok(NULL,delimiter))))
                 fprintf(output, "|%-5.5s", token);
             fprintf(output, i == dataIndex - 1 ? "" : "\n");
         }
