@@ -1,0 +1,220 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
+int main()
+{
+   FILE *in, *out;
+   char infile[40], outfile[40], file[3];
+   // For iterator, output mode and input mode
+   int i, om, im;
+   // Reading input and output file
+   printf("Enter input file name: ");
+   scanf("%s", infile);
+   printf("Enter output file name: ");
+   scanf("%s", outfile);
+
+   // Setting the input mode based on extension
+   for (i = 0; infile[i] != '.' && infile[i] != '\0'; i++)
+       ;
+
+   if (infile[i + 1] == 'c' && infile[i + 2] == 's' && infile[i + 3] == 'v')
+       im = 0;
+   else if (infile[i + 1] == 't' && infile[i + 2] == 'l' && infile[i + 3] == '5')
+       im = 1;
+   else if (infile[i + 1] == 't' && infile[i + 2] == 'r' && infile[i + 3] == '9')
+       im = 3;
+   else if (infile[i + 1] == 't' && infile[i + 2] == 'c' && infile[i + 3] == '9')
+       im = 4;
+   else
+   {
+       printf("File format not consistent\n");
+       return 0;
+   }
+   // Setting the output mode on the basis of extension
+   for (i = 0; outfile[i] != '.' && outfile[i] != '\0'; i++);
+   if (outfile[i + 1] == 'c' && outfile[i + 2] == 's' && outfile[i + 3] == 'v')
+       om = 0;
+   else if (outfile[i + 1] == 't' && outfile[i + 2] == 'l' && outfile[i + 3] == '5')
+       om = 1;
+   else if (outfile[i + 1] == 't' && outfile[i + 2] == 'r' && outfile[i + 3] == '9')
+       om = 2;
+   else if (outfile[i + 1] == 't' && outfile[i + 2] == 'c' && outfile[i + 3] == '9')
+       om = 3;
+   else
+   {
+       printf("File format not consistent\n");
+       return 0;
+   }
+   in = fopen(infile, "r");
+   out = fopen(outfile, "w");
+   // If the files could not be opened
+   if (in == NULL || out == NULL)
+       printf("Unsuccessfull");
+   char str[50], ch;
+   // First case so that the delimiter is , or \n
+   if (im == 0)
+       while (fscanf(in, "%[^\n,]", str) != EOF)
+       {
+           // Scanning the delimiter
+           fscanf(in, "%c", &ch);
+           if (om == 0)
+           {
+               // If same format output as it is
+               fprintf(out, "%s", str);
+               if (ch == ',')
+                   fprintf(out, ",");
+               else
+                   fprintf(out, "\n");
+           }
+           else if (om == 1)
+           {
+               // Output first 5 characters
+               for (i = 0; str[i] != '\0' && i < 5; i++)
+               {
+                   fprintf(out, "%c", str[i]);
+               }
+               // Output the rest as spaces
+               while (i != 5)
+               {
+                   i++;
+                   fprintf(out, " ");
+               }
+               if (ch == ',')
+                   fprintf(out, "|");
+               else
+                   fprintf(out, "\n");
+           }
+           else if (om == 2)
+           {
+               for (i = 0; str[i] != '\0'; i++);
+               int flag = 0;
+               int j = i, count = 0;
+               // Outputting spaces first
+               while (j - 9 < 0)
+               {
+                   j++;
+                   count++;
+                   fprintf(out, " ");
+               }
+               // The remaining locations are filled with last digits
+               for (i = i - 1; count != 9; i--, count++)
+                   fprintf(out, "%c", str[i]);
+               if (ch == ',')
+                   fprintf(out, "|");
+               else
+                   fprintf(out, "\n");
+           }
+           else if (om == 3)
+           {
+               int len = strlen(str);
+               // Starting spaces
+               for (i = 0; i < (9 - len) / 2; i++)
+                   fprintf(out, " ");
+               // Output whole number
+               if (len <= 9)
+                   for (i = 0; str[i] != '\0'; i++)
+                       fprintf(out, "%c", str[i]);
+               else
+               {
+                   // Output only from middle range
+                   for (i = len / 2 - 4; i < ceil(len / 2.0) + 4; i++)
+                       fprintf(out, "%c", str[i]);
+               }
+               // End sapces
+               for (i = 0; i < ceil(9 - len) / 2; i++)
+                   fprintf(out, " ");
+               // In case of even length > 9 we print only 8 digits.
+               // Thus outputting an extra space at end
+               if (len > 9 && len % 2 == 0)
+                   fprintf(out, " ");
+               if (ch == ',')
+                   fprintf(out, "|");
+               else
+                   fprintf(out, "\n");
+           }
+       }
+   else
+       while (fscanf(in, "%[^\n|]", str) != EOF)
+       {
+           // Extarcting the number so that all previous methods can be used
+           for (i = 0; str[i] != '\0'; i++)
+           {
+               if (str[i] == ' ')
+               {
+                   for (int j = i; str[j] != '\0'; j++)
+                       str[j] = str[j + 1];
+                   i--;
+               }
+           }
+           // Now str contains the number without space just like the pev case.
+           fscanf(in, "%c", &ch);
+           // Repeating the same code as above
+           if (om == 0)
+           {
+               fprintf(out, "%s", str);
+               if (ch == '|')
+                   fprintf(out, ",");
+               else
+                   fprintf(out, "\n");
+           }
+           else if (om == 1)
+           {
+               for (i = 0; str[i] != '\0' && i < 5; i++)
+               {
+                   fprintf(out, "%c", str[i]);
+               }
+               while (i != 5)
+               {
+                   i++;
+                   fprintf(out, " ");
+               }
+               if (ch == '|')
+                   fprintf(out, "|");
+               else
+                   fprintf(out, "\n");
+           }
+           else if (om == 2)
+           {
+               for (i = 0; str[i] != '\0'; i++);
+               int flag = 0;
+               int j = i, count = 0;
+               while (j - 9 < 0)
+               {
+                   j++;
+                   count++;
+                   fprintf(out, " ");
+               }
+               for (i = i - 1; count != 9; i--, count++)
+                   fprintf(out, "%c", str[i]);
+               if (ch == '|')
+                   fprintf(out, "|");
+               else
+                   fprintf(out, "\n");
+           }
+           else if (om == 3)
+           {
+               int len = strlen(str);
+               for (i = 0; i < (9 - len) / 2; i++)
+                   fprintf(out, " ");
+               if (len <= 9)
+                   for (i = 0; str[i] != '\0'; i++)
+                       fprintf(out, "%c", str[i]);
+               else
+               {
+                   for (i = len / 2 - 4; i < ceil(len / 2.0) + 4; i++)
+                       fprintf(out, "%c", str[i]);
+               }
+               for (i = 0; i < ceil(9 - len) / 2; i++)
+                   fprintf(out, " ");
+               if (len > 9 && len % 2 == 0)
+                   fprintf(out, " ");
+               if (ch == '|')
+                   fprintf(out, "|");
+               else
+                   fprintf(out, "\n");
+           }
+       }
+   //system("pause");
+   return 0;
+}

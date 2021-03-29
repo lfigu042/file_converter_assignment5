@@ -1,0 +1,401 @@
+
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <math.h>
+#define MAX_ROW 1000
+#define MAX_STRING_SIZE 1000
+#define MAX_LEN 1000
+
+//declaring the functions used throughout the program
+void handleConvert();
+void handleFiles();
+char getCommandWord(char cmd[], int maxLength);
+void csvConversions(char* sourceFile, char* destinationFile, char* destExt);
+void tl5Conversions(char* sourceFile, char* destinationFIle, char* destExt);
+void tr9Conversions(char* sourceFile, char* destinationFile, char* destExt);
+
+int main() {
+    char cmd[MAX_STRING_SIZE];
+    char lastCharacter;
+
+    printf("\n********************************************************************\n");
+    printf("******************* FILE CONVERSION PROGRAM ************************\n");
+    printf("********************************************************************\n\n");
+
+    printf("List of commands:\n\n");
+    printf("quit\t\t\t\t\tTerminates and exits the program\n");
+    printf("convert <source.ext><dest.ext>\t\tConverts file\n");
+    printf("files\t\t\t\t\tShows list of supported files\n\n");
+
+    while (1) {
+        printf("\nPlease enter command: ");
+        lastCharacter = getCommandWord(cmd, MAX_STRING_SIZE);
+        if (!strcmp(cmd, "quit")) {
+            printf("\nExiting Program\n\n");
+            break;
+        }
+        else if (!strcmp(cmd, "files")) {
+            handleFiles();
+        }
+        else if (!strcmp(cmd, "convert")) {
+            if (lastCharacter == '\n') {
+                printf("\nNOT ENOUGH AGRUMENTS\n");
+            }
+            else {
+                handleConvert();
+            }
+        }
+        else {
+            printf("\nINVALID COMMAND\n");
+            while (lastCharacter != '\n')
+                lastCharacter = getCommandWord(cmd, MAX_STRING_SIZE);
+        }
+    }
+}
+
+char getCommandWord(char cmd[], int maxLength) {
+    char lastCharacter;
+    int i;
+
+    for (i = 0; i < maxLength && (cmd[i] = getchar()) != ' ' && cmd[i] != '\n'; i++);
+
+    lastCharacter = cmd[i];
+    cmd[i] = '\0';
+
+    return lastCharacter;
+}
+
+void csvConversions(char* sourceFile, char* destinationFile, char* destExt) {
+    int i = 0;
+    FILE* input = fopen(sourceFile, "r");
+    if (input == NULL) {
+        printf("\nNO INPUT FILE FOUND\n");
+        return;
+    }
+    char* data[MAX_ROW];
+    char* token = (char*)malloc(MAX_STRING_SIZE + 1);
+    int dataIndex = 0;
+    char line[MAX_LEN];
+    char delim[] = " ,\n";
+
+    for (; fgets(line, MAX_LEN, input) != NULL; i++) {     //using fscanf with an expression, ignores all other delimters except new line
+        data[dataIndex++] = (char*)malloc(strlen(line) + 1);
+        strcpy(data[dataIndex - 1], line);
+    }
+    fclose(input);
+    input = NULL;
+
+    //converting to .tl5
+    if (!strcmp(destExt, "tl5")) {
+        FILE* output = fopen(destinationFile, "w");
+        for (i = 0; i < dataIndex; i++) {
+            token = strtok(data[i], delim);
+            fprintf(output, "%-5.5s", token);
+            while ((token = strtok(NULL, delim)))
+                fprintf(output, "|%-5.5s", token);
+            fprintf(output, "\n");
+        }
+        fclose(output);
+    }
+    //converting to .tr9
+    else if (!strcmp(destExt, "tr9")) {
+        FILE* output = fopen(destinationFile, "w");
+        for (i = 0; i < dataIndex; i++) {
+            token = strtok(data[i], delim);
+            fprintf(output, "%9.9s|", token);
+            while ((token = strtok(NULL, delim)))
+                fprintf(output, "%9.9s|", token);
+            fprintf(output, "\n");
+        }
+        fclose(output);
+    }
+    //converting to .csv
+    else if (!strcmp(destExt, "csv")) {
+        FILE* output = fopen(destinationFile, "w");
+        for (i = 0; i < dataIndex; i++) {
+            token = data[i];
+            for (; *token != '\n';) {
+                if (*token != ' ' && *token != '\n') {
+                    fprintf(output, "%c", *token);
+                }
+                token++;
+            }
+            fprintf(output, "\n");
+        }
+        fclose(output);
+    }
+    else {
+        printf("\nFILE EXTENSION NOT SUPPORTED FOR CONVERSION (yet)\n");        //prints if an extension that's not supported is passed
+        return;
+    }
+    printf("\nCONVERSION COMPLETE!\n");     //prints when conversion is done
+}
+
+void tl5Conversions(char* sourceFile, char* destinationFile, char* destExt) {
+    int i = 0;
+    FILE* input = fopen(sourceFile, "r");
+    if (input == NULL) {
+        printf("\nNO INPUT FILE FOUND\n");
+        return;
+    }
+    char* data[MAX_ROW];
+    char* token = (char*)malloc(MAX_STRING_SIZE + 1);
+    int dataIndex = 0;
+    char line[MAX_LEN];
+    const int cellWidth = 5;
+    char delim[] = " |";
+
+    for (;fgets(line, MAX_LEN, input) != NULL; i++) {  //using fgets to get the complete line until "\n" is reached
+        data[dataIndex++] = (char*)malloc(strlen(line) + 1);
+        strcpy(data[dataIndex - 1], line);
+    }
+    fclose(input);
+    input = NULL;
+
+    //checking that the file format corresponds to the file extension
+    //tl5 files must have width of 5 character spaces (each cell is of size 5) and divided by |
+    int charCounter = 0;
+    int stringWidth = 0;
+    char *c = (char*)malloc(MAX_STRING_SIZE + 1);
+
+    for (i = 0; i < dataIndex; i++) {
+        c = data[i];
+        for (; *c != '\0';) {
+            if (*c != '|' && *c != '\n') {
+                ++charCounter;
+            }
+            else {
+                stringWidth = charCounter;
+                if (stringWidth != cellWidth) {
+                    printf("\nERROR IN FILE FORMAT!\n");
+                    return;
+                }
+                charCounter = 0;
+            }
+            c++;
+        }
+    }
+    printf("\nCORRECT FORMAT! COMMENCING CONVERSION\n");    //prints when the format check is passed
+
+    //converting to .csv
+    if (!strcmp(destExt, "csv")) {
+        FILE* output = fopen(destinationFile, "w");
+        for (i = 0; i < dataIndex; i++) {
+            token = strtok(data[i], delim);
+            fprintf(output, "%s", token);
+            while ((token = strtok(NULL, delim))) {
+                if (*token == '\n')
+                    fprintf(output, "%s", token);
+                else
+                    fprintf(output, ",%s", token);
+            }
+        }
+        fclose(output);
+        output = NULL;
+    }
+    //converting to .tr9
+    else if (!strcmp(destExt, "tr9")) {
+        FILE* output = fopen(destinationFile, "w");
+        for (i = 0; i < dataIndex; i++) {
+            token = strtok(data[i], delim);
+            fprintf(output, "%9.9s|", token);
+            while ((token = strtok(NULL, delim))) {
+                if (*token == '\n')
+                    fprintf(output, "%s", token);
+                else
+                    fprintf(output, "%9.9s|", token);
+            }
+        }
+        fclose(output);
+        output = NULL;
+    }
+    //converting to .tl5
+    else if (!strcmp(destExt, "tl5")) {
+        FILE* output = fopen(destinationFile, "w");
+        for (i = 0; i < dataIndex; i++) {
+            token = strtok(data[i], delim);
+            fprintf(output, "%-5.5s", token);
+            while ((token = strtok(NULL, delim))) {
+                if (*token == '\n')
+                    fprintf(output, "%s", token);
+                else
+                    fprintf(output, "|%-5.5s", token);
+            }
+        }
+        fclose(output);
+        output = NULL;
+    }
+    else {
+        printf("\nFILE EXTENSION NOT SUPPORTED FOR CONVERSION (yet)\n");    //prints if an extension is not supported
+        return;
+    }
+    printf("\nCONVERSION COMPLETE!\n");     //prints when the conversion is done
+}
+
+void tr9Conversions(char* sourceFile, char* destinationFile, char* destExt) {
+    int i = 0;
+    FILE* input = fopen(sourceFile, "r");
+    if (input == NULL) {
+        printf("\nNO INPUT FILE FOUND\n");
+        return;
+    }
+    char* data[MAX_ROW];
+    char* token = (char*)malloc(MAX_STRING_SIZE + 1);
+    int dataIndex = 0;
+    char line[MAX_LEN];
+    const int cellWidth = 9;
+    char delim[] = " |";
+
+    for (;fgets(line, MAX_LEN, input) != NULL; i++) {   //using fgets to get the complete line until "\n" is reached
+        data[dataIndex++] = (char*)malloc(strlen(line) + 1);
+        strcpy(data[dataIndex - 1], line);
+    }
+    fclose(input);
+    input = NULL;
+
+    //checking that the file format corresponds to the file extension
+    //tr9 files must have a width of 9 character spaces (each cell is of size 9) divided by |
+    int charCounter = 0;
+    int stringWidth = 0;
+    char* c = (char*)malloc(MAX_STRING_SIZE + 1);
+
+    for (i = 0; i < dataIndex; i++) {
+        c = data[i];
+        for (; *c != '\0';) {
+            if (*c != '|' && *c != '\n') {
+                ++charCounter;
+            }
+            else if(*c == '\n'){
+                charCounter = 0;
+                stringWidth = 0;
+            }
+            else {
+                stringWidth = charCounter;
+                if (stringWidth != cellWidth) {
+                    printf("\nERROR IN FILE FORMAT\n");
+                    return;
+                }
+                charCounter = 0;
+            }
+            c++;
+        }
+    }
+    printf("\nCORRECT FORMAT! COMMENCING CONVERSION\n");    //prints when the format check is passed.
+
+    //converting to .csv
+    if (!strcmp(destExt, "csv")) {
+        FILE* output = fopen(destinationFile, "w");
+        for (i = 0; i < dataIndex; i++) {
+            token = strtok(data[i], delim);
+            fprintf(output, "%s", token);
+            while ((token = strtok(NULL, delim))) {
+                if (*token == '\n')
+                    fprintf(output, "%s", token);
+                else
+                    fprintf(output, ",%s", token);
+            }
+        }
+        fclose(output);
+        output = NULL;
+    }
+    //converting to .tr9
+    else if (!strcmp(destExt, "tr9")) {
+        FILE* output = fopen(destinationFile, "w");
+        for (i = 0; i < dataIndex; i++) {
+            token = strtok(data[i], delim);
+            fprintf(output, "%9.9s|", token);
+            while ((token = strtok(NULL, delim))) {
+                if (*token == '\n')
+                    fprintf(output, "%s", token);
+                else
+                    fprintf(output, "%9.9s|", token);
+            }
+        }
+        fclose(output);
+        output = NULL;
+    }
+    //converting to .tl5
+    else if (!strcmp(destExt, "tl5")) {
+        FILE* output = fopen(destinationFile, "w");
+        for (i = 0; i < dataIndex; i++) {
+            token = strtok(data[i], delim);
+            fprintf(output, "%-5.5s", token);
+            while ((token = strtok(NULL, delim))) {
+                if (*token == '\n')
+                    fprintf(output, "%s", token);
+                else
+                    fprintf(output, "|%-5.5s", token);
+            }
+        }
+        fclose(output);
+        output = NULL;
+    }
+    else {
+        printf("\nFILE EXTENSION NOT SUPPORTED FOR CONVERSION (yet)\n");   //error if passed an extension besides the supported ones
+        return;
+    }
+    printf("\nCONVERSION COMPLETE!\n");     //prints once conversion is done
+}
+
+void handleConvert() {
+
+    char sourceFile[MAX_STRING_SIZE];
+    char destinationFile[MAX_STRING_SIZE];
+    char lastCharacter;
+
+    //getting the sourceFile
+    lastCharacter = getCommandWord(sourceFile, MAX_STRING_SIZE);
+    if (lastCharacter == '\n') {
+        printf("\nNOT ENOUGHT ARGUMENTS\n");
+        return;
+    }
+    //getting the destinationFile
+    lastCharacter = getCommandWord(destinationFile, MAX_STRING_SIZE);
+    if (lastCharacter != '\n') {
+        printf("\nTOO MANY ARGUMENTS\n");
+        while (getCommandWord(destinationFile, MAX_STRING_SIZE) != '\n');
+        return;
+    }
+
+    char* sourceExt = NULL; //to store the extension for the source file
+    char* destExt = NULL;   //to store the extension for the destination file
+
+    //checking whether the input includes an extension
+    if ((sourceExt = strstr(sourceFile, ".")) != NULL) {
+        sourceExt++;
+    }
+    else {
+        printf("\nPLEASE IDENTIFY THE FILE EXTENSTION FOR SOURCE\n");
+        return;
+    }
+
+    if ((destExt = strstr(destinationFile, ".")) != NULL) {
+        destExt++;
+    }
+    else {
+        printf("\nPLEASE IDENTIFY THE FILE EXTENSTION FOR DESTINATION\n");
+        return;
+    }
+
+    //depending on the extension of the sourceFile, calling the function
+    if (!strcmp(sourceExt, "csv")) {
+        csvConversions(sourceFile, destinationFile, destExt);
+    }
+    else if (!strcmp(sourceExt, "tl5")) {
+        tl5Conversions(sourceFile, destinationFile, destExt);
+    }
+    else if (!strcmp(sourceExt, "tr9")) {
+        tr9Conversions(sourceFile, destinationFile, destExt);
+    }
+    else {
+        printf("\nFILE EXTENSION NOT SUPPORTED\n");
+        return;
+    }
+}
+
+void handleFiles() {
+
+    printf("\n*** LIST OF SUPPORTED FILES ***\n");
+    printf("\t.csv\n\t.tl5\n\t.tr9\n\n");
+}
