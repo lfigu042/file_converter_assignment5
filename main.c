@@ -8,6 +8,10 @@
 #define MAX_LEN 1000
 #define MAX_TOKEN 100
 
+//1,2,3,4
+//5,55555, 7
+//8,11111,   12,   13,15
+
     char* trim(char* token) {
         if (!token)     //error checking
             return NULL;
@@ -22,6 +26,43 @@
     void toCSV(char* inFile,char* outFile, char* inType){
         printf("\ninput file-> %s, output file-> %s, changing .csv to .%s\n", inFile, outFile, inType);
 
+        char* delimiter; //allows to split file either by commas or |
+        if((!strcmp(inType, "csv"))){ delimiter = ",";  }else{  delimiter = "|"; }
+        printf("delimiter: %s \n", delimiter);
+
+        char inTemp[MAX_TOKEN]; //to keep original string unchanged
+        char outTemp[MAX_TOKEN];
+        char temp1[MAX_TOKEN] = "../";
+        char temp2[MAX_TOKEN] = "../";
+
+        strcpy(inTemp, inFile);
+        strcpy(outTemp, outFile);
+
+        strcat(temp1,inTemp); //need to add "../" at beginning of file path to avoid a pop up error
+        strcat(temp2,outTemp);
+
+        int i = 0,dataIndex = 0;
+
+        FILE* input = fopen(temp1, "r");
+        char* data[MAX_ROW];        // will store the file content
+        char* token;
+        char line[MAX_LEN];         //temporary placeholder for a line input from the file
+        for (; fscanf(input, "%[^\n]\n", line) != EOF; i++) {
+            data[dataIndex] = (char*)malloc(strlen(line) + 1);//+1 for \0
+            strcpy(data[dataIndex++], line);
+        }
+        fclose(input);
+
+        FILE* output = fopen(temp2, "w");
+        for (i = 0; i < dataIndex; i++) {
+            token = trim(strtok(data[i], delimiter));     //tokenizes the ith row stored in data[i] and trims it
+            fprintf(output, "%s", token);
+            while ((token = trim(strtok(NULL,delimiter))))
+                fprintf(output, ",%s", token);
+            fprintf(output, i == dataIndex - 1 ? "" : "\n");
+        }
+        fclose(output);
+        printf("\n****** %s is ready to be viewed! ******\n\n\n", outFile);
     }
 
 //    ex: convert t.csv t.tc9
@@ -69,7 +110,7 @@
             fprintf(output, i == dataIndex - 1 ? "" : "\n");
         }
         fclose(output);
-        printf("%s is ready to be viewed!\n", outFile);
+        printf("\n****** %s is ready to be viewed! ******\n\n\n", outFile);
     }
 //    ex: convert t.csv t.tr9
     void toTR9(char* inFile,char* outFile, char* inType){
@@ -135,7 +176,7 @@
                 printf("converting from %s to %s \n",inputFileType,outputFileType );
 
 //                 check that file types are supported
-                if( ((!strcmp(inputFileType, "csv")) || (!strcmp(inputFileType, "tc9")) || (!strcmp(command, "tl5")) || (!strcmp(command, "tr9")))
+                if( ((!strcmp(inputFileType, "csv")) || (!strcmp(inputFileType, "tc9")) || (!strcmp(inputFileType, "tl5")) || (!strcmp(inputFileType, "tr9")))
                 && ((!strcmp(outputFileType, "csv")) || (!strcmp(outputFileType, "tc9")) || (!strcmp(outputFileType, "tl5")) || (!strcmp(outputFileType, "tr9"))) ){
                     printf(" file types accepted, processing request...\n");
 
