@@ -194,14 +194,15 @@ int main()
            }
            else if (om == 3)
            {
+
+
                int len = strlen(str);
                for (i = 0; i < (9 - len) / 2; i++)
                    fprintf(out, " ");
                if (len <= 9)
                    for (i = 0; str[i] != '\0'; i++)
                        fprintf(out, "%c", str[i]);
-               else
-               {
+               else {
                    for (i = len / 2 - 4; i < ceil(len / 2.0) + 4; i++)
                        fprintf(out, "%c", str[i]);
                }
@@ -213,6 +214,10 @@ int main()
                    fprintf(out, "|");
                else
                    fprintf(out, "\n");
+
+
+
+
            }
        }
    //system("pause");

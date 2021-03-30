@@ -7,10 +7,10 @@
 #define MAX_ROW 1000    //input file will have less than or equal to 1000 lines
 #define MAX_LEN 1000
 #define MAX_TOKEN 100
-
+//for t.csv
 //1,2,3,4
-//5,55555, 7
-//8,111111,   12,   13,15
+//5,654321,7
+//8,12345678901,12,13,15
 
     char* trim(char* token) {
         if (!token)     //error checking
@@ -70,7 +70,108 @@
 
 //    ex: convert t.csv t.tc9
     void toTC9(char* inFile,char* outFile, char* inType){
+    /*
+     *.tc9 file: stores tabular data in plain text. Each line of the file represents a table row
+        containing one or more cells separated by ’|’ character. Each cell is 9-characters long
+        and contains a center-aligned string. If the string stored in a cell has n < 9 characters,
+        the rest of it will be filled with spaces; i.e. there will be be (9−n)/2 extra space characters in
+        the cell before the string and (9−n)/2 extra space characters in the field after it. However,
+        if a string with more than 9 characters and odd length is supposed to be placed in a
+        cell, only its middle 9 characters is stored in the cell. In the case that the length of
+        original string is even and greater than 9, its middle 8 characters must be stored in the
+        cell (plus an extra space character).
+     */
         printf("\ninput file-> %s, output file-> %s, changing .%s to .tc9\n", inFile, outFile, inType);
+
+        char* delimiter; //allows to split file either by commas or |
+        if((!strcmp(inType, "csv"))){ delimiter = ",";  }else{  delimiter = "|"; }
+        printf("delimiter: %s \n", delimiter);
+
+        int char_count; //store how many extra chars are in original cell
+        char inTemp[MAX_TOKEN]; //to keep original string unchanged
+        char outTemp[MAX_TOKEN];
+        char temp1[MAX_TOKEN] = "../";
+        char temp2[MAX_TOKEN] = "../";
+        char* data[MAX_ROW];        // will store the file content
+        char* token;
+        char line[MAX_LEN];         //temporary placeholder for a line input from the file
+        int i = 0,dataIndex = 0, side_spaces = 0;
+        strcpy(inTemp, inFile);
+        strcpy(outTemp, outFile);
+        strcat(temp1,inTemp); //need to add "../" at beginning of file path to avoid a pop up error
+        strcat(temp2,outTemp);
+
+//    Storing input data
+        FILE* input = fopen(temp1, "r");
+        for (; fscanf(input, "%[^\n]\n", line) != EOF; i++) {
+            data[dataIndex] = (char*)malloc(strlen(line) + 1);//+1 for \0
+            strcpy(data[dataIndex++], line);
+        }
+        fclose(input);
+
+//    Processing output data
+        FILE* output = fopen(temp2, "w");
+
+        for (i = 0; i < dataIndex; i++) {
+            printf("Data[i] -> %s\n",data[i]);
+            token = trim(strtok(data[i], delimiter));   //tokenizes the ith row stored in data[i] and trims it
+            char_count = strlen(token); //store how many extra chars are in original cell
+
+            printf("token -> %s .... char_count -> %d\n",token, char_count);
+
+            if(char_count <= 9){
+                side_spaces = round((float)(9 - char_count)/2);
+                printf("side spaces %d\n",side_spaces);
+                int y, z; //iterators
+                for (y = 0; y < side_spaces; y++)
+                    fprintf(output, " ");
+                fprintf(output, "%s", token);
+                for (z = 0; z < 9-char_count-side_spaces; z++)
+                    fprintf(output, " ");
+                fprintf(output, "|");
+
+            }else{
+                printf("token bigger than 9, only middle 9 chars will be saved\n");
+                side_spaces = round((float)(char_count - 9)/2); //number that will start printing
+//                int a; //iterator
+
+                fprintf(output, "%.9s|", token+side_spaces);
+            }
+
+            while ((token = trim(strtok(NULL,delimiter)))) {
+                char_count = strlen(token);
+                printf("token -> %s .... char_count -> %d\n",token, char_count);
+
+                if(char_count <= 9){
+                    side_spaces = round((float)(9 - char_count)/2); // spaces on left side
+                    printf("side spaces %d\n",side_spaces);
+                    int y, z; //iterators
+                    for (y = 0; y < side_spaces; y++)
+                        fprintf(output, " ");
+                    fprintf(output, "%s", token);
+                    for (z = 0; z < 9-char_count-side_spaces; z++)
+                        fprintf(output, " ");
+                    fprintf(output, "|");
+
+                }else{
+                    printf("token bigger than 9, only middle 9 chars will be saved\n");
+                    side_spaces = round((float)(char_count - 9)/2); //number that will start printing
+//                int a; //iterator
+
+                    fprintf(output, "%.9s|", token+side_spaces);
+                }
+            }
+
+            fprintf(output, i == dataIndex - 1 ? "" : "\n");
+        }
+
+
+
+        fclose(output);
+        printf("\n****** %s is ready to be viewed! ******\n\n\n", outFile);
+
+
+
     }
 
 //    ex: convert t.csv t.tl5
