@@ -1,4 +1,3 @@
-#define _CRT_SECURE_NO_DEPRECATE
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
@@ -7,10 +6,7 @@
 #define MAX_ROW 1000    //input file will have less than or equal to 1000 lines
 #define MAX_LEN 1000
 #define MAX_TOKEN 100
-//for t.csv
-//1,2,3,4
-//5,654321,7
-//8,12345678901,12,13,15
+
 
     char* trim(char* token) {
         if (!token)     //error checking
@@ -24,9 +20,9 @@
     }
 //    ex: convert t.tl5 t.csv
     void toCSV(char* inFile,char* outFile, char* inType){
-/*
-*   .csv (comma separated values) file: stores tabular data in plain text. Each line of the file represents a table row containing one or more cells separated by commas.
-*/
+    /*
+    *   .csv (comma separated values) file: stores tabular data in plain text. Each line of the file represents a table row containing one or more cells separated by commas.
+    */
         printf("\ninput file-> %s, output file-> %s, changing .%s to .csv\n", inFile, outFile, inType);
 
         char* delimiter; //allows to split file either by commas or |
@@ -35,7 +31,7 @@
 
         char inTemp[MAX_TOKEN]; //to keep original string unchanged
         char outTemp[MAX_TOKEN];
-        char temp1[MAX_TOKEN] = "../";
+        char temp1[MAX_TOKEN] = "../"; //needed to find the file
         char temp2[MAX_TOKEN] = "../";
 
         strcpy(inTemp, inFile);
@@ -87,8 +83,8 @@
         if((!strcmp(inType, "csv"))){ delimiter = ",";  }else{  delimiter = "|"; }
         printf("delimiter: %s \n", delimiter);
 
-        int char_count; //store how many extra chars are in original cell
-        char inTemp[MAX_TOKEN]; //to keep original string unchanged
+        int char_count;             //store how many extra chars are in original cell
+        char inTemp[MAX_TOKEN];     //to keep original string unchanged
         char outTemp[MAX_TOKEN];
         char temp1[MAX_TOKEN] = "../";
         char temp2[MAX_TOKEN] = "../";
@@ -98,7 +94,7 @@
         int i = 0,dataIndex = 0, side_spaces = 0;
         strcpy(inTemp, inFile);
         strcpy(outTemp, outFile);
-        strcat(temp1,inTemp); //need to add "../" at beginning of file path to avoid a pop up error
+        strcat(temp1,inTemp);       //need to add "../" at beginning of file path to avoid a pop up error
         strcat(temp2,outTemp);
 
 //    Storing input data
@@ -133,8 +129,6 @@
             }else{
                 printf("token bigger than 9, only middle 9 chars will be saved\n");
                 side_spaces = round((float)(char_count - 9)/2); //number that will start printing
-//                int a; //iterator
-
                 fprintf(output, "%.9s|", token+side_spaces);
             }
 
@@ -156,21 +150,14 @@
                 }else{
                     printf("token bigger than 9, only middle 9 chars will be saved\n");
                     side_spaces = round((float)(char_count - 9)/2); //number that will start printing
-//                int a; //iterator
-
                     fprintf(output, "%.9s|", token+side_spaces);
                 }
             }
 
             fprintf(output, i == dataIndex - 1 ? "" : "\n");
         }
-
-
-
         fclose(output);
         printf("\n****** %s is ready to be viewed! ******\n\n\n", outFile);
-
-
 
     }
 
