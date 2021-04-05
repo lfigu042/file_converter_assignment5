@@ -4,7 +4,7 @@
     Programming Assignment 5
     FIU Spring 2021
     Professor Kianoosh G. Boroojeni
-    By: Laura Figueroa PID-4918449
+    By: Laura
     
     program converts a file format into another
     
